@@ -200,15 +200,15 @@ getVerticies(const std::vector<std::vector<bool>>& grid, uint32_t topLeftX, uint
 
 int main(int argc, char const *argv[])
 {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "MarchingCubes");
+    sf::RenderWindow window(sf::VideoMode(600, 600), "MarchingCubes");
     sf::VertexArray linesVA;
 
     linesVA.setPrimitiveType(sf::Lines);
 
     std::vector<sf::CircleShape> pointsVec;
     uint32_t cellSize = 20;
-    uint32_t xCount = (window.getSize().x / cellSize) + 2;
-    uint32_t yCount = (window.getSize().y / cellSize) + 2;
+    uint32_t xCount = (window.getSize().x / cellSize) + 1;
+    uint32_t yCount = (window.getSize().y / cellSize) + 1;
 
     pointsVec.resize(xCount * yCount);
 
