@@ -14,6 +14,15 @@ enum LINE_STATE{
     BD,
 };
 
+uint32_t cellSize = 15;
+uint32_t xCount = 0;
+uint32_t yCount = 0;
+
+std::random_device dv;
+std::mt19937 randomGen(dv());
+std::uniform_int_distribution uniformDist(0, 1);
+
+std::vector<std::vector<bool>> grid;
 
 inline static std::pair<sf::Vertex, sf::Vertex>
 getLine(sf::Vector2f topLeft, uint32_t length, LINE_STATE state)
@@ -37,69 +46,58 @@ getLine(sf::Vector2f topLeft, uint32_t length, LINE_STATE state)
     std::pair<sf::Vertex, sf::Vertex> output;
     output.first.color = sf::Color::White;
     output.second.color = sf::Color::White;
+    sf::Vector2f a = topLeft + sf::Vector2f(0.0f, length / 2.0f);
+    sf::Vector2f b = topLeft + sf::Vector2f(length / 2.0f, length);
+    sf::Vector2f c = topLeft + sf::Vector2f(length, length / 2.0f);
+    sf::Vector2f d = topLeft + sf::Vector2f(length / 2.0f, 0.0f);
     switch(state)
     {
         case AB:
         {
             //a
-            output.first.position = topLeft;
-            output.first.position.y += length / 2;
+            output.first.position = a;
             //b
-            output.second.position = topLeft;
-            output.second.position.x += length / 2;
-            output.second.position.y += length;
+            output.second.position = b;
         }
         break;
         case BC:
         {
             // b
-            output.first.position = topLeft;
-            output.first.position.x += length / 2;
-            output.first.position.y += length;
+            output.first.position = b;
             // c
-            output.second.position = topLeft;
-            output.second.position += sf::Vector2f((float)length, (float)length / 2);
+            output.second.position = c;
         }
         break;
         case CD:
         {
             //d
-            output.first.position = topLeft;
-            output.first.position.x += length / 2;
+            output.first.position = d;
             //c
-            output.second.position = topLeft;
-            output.second.position += sf::Vector2f((float)length, (float)length / 2);
+            output.second.position = c;
         }
         break;
         case DA:
         {
             //d
-            output.first.position = topLeft;
-            output.first.position.x += length / 2;
+            output.first.position = d;
             //a
-            output.second.position = topLeft;
-            output.second.position.y += length / 2;
+            output.second.position = a;
         }
         break;
         case AC:
         {
             //c
-            output.first.position = topLeft;
-            output.first.position += sf::Vector2f((float)length, (float)length / 2.0f);
+            output.first.position = c;
             //a
-            output.second.position = topLeft;
-            output.second.position.y += length / 2;
+            output.second.position = a;
         }
         break;
         case BD:
         {
             // b
-            output.first.position = topLeft;
-            output.first.position.x += length / 2;
-            output.first.position.y += length;
+            output.first.position = b;
             //d
-            output.second.position = topLeft;
-            output.second.position.x += length / 2;
+            output.second.position = d;
         }
         break;
     }
@@ -107,14 +105,14 @@ getLine(sf::Vector2f topLeft, uint32_t length, LINE_STATE state)
 }
 
 inline static std::vector<std::pair<sf::Vertex, sf::Vertex>>
-getVerticies(const std::vector<std::vector<bool>>& grid, uint32_t topLeftX, uint32_t topLeftY, uint32_t length)
+getVerticies(uint32_t topLeftX, uint32_t topLeftY, uint32_t length)
 {
     bool topLeft = grid[topLeftY][topLeftX];
-    bool topRight = grid[topLeftY + 1][topLeftX];
-    bool bottomLeft = grid[topLeftY][topLeftX + 1];
+    bool topRight = grid[topLeftY][topLeftX + 1];
+    bool bottomLeft = grid[topLeftY + 1][topLeftX];
     bool bottomRight = grid[topLeftY + 1][topLeftX + 1];
 
-    uint32_t state = topLeft * 8 + topRight * 4 + bottomRight * 2 + bottomLeft;
+    uint32_t state = topLeft * 8 + topRight * 4 + bottomRight * 2 + bottomLeft * 1;
 
     std::vector<std::pair<sf::Vertex, sf::Vertex>> verticies;
 
@@ -143,8 +141,8 @@ getVerticies(const std::vector<std::vector<bool>>& grid, uint32_t topLeftX, uint
         break;
         case 5:
         {
-            verticies.push_back(getLine(topLeftPos, length, DA));
-            verticies.push_back(getLine(topLeftPos, length, BC));
+            verticies.push_back(getLine(topLeftPos, length, CD));
+            verticies.push_back(getLine(topLeftPos, length, AB));
         }
         break;
         case 6:
@@ -198,33 +196,60 @@ getVerticies(const std::vector<std::vector<bool>>& grid, uint32_t topLeftX, uint
     return verticies;
 }
 
+void populateGrid(std::vector<sf::CircleShape>& pointsVec)
+{
+ for(uint32_t i = 0; i < yCount; i++)
+    for (uint32_t j = 0; j < xCount; j++){
+        grid[i][j] = (bool)uniformDist(randomGen);
+        uint32_t index = j * yCount + i;
+
+        sf::CircleShape& shape = pointsVec[index];
+        if (grid[i][j])
+            shape.setFillColor(sf::Color::White);
+        else
+            shape.setFillColor(sf::Color::Black);
+
+        shape.setRadius(2.0f);
+        shape.setOrigin(sf::Vector2f(shape.getRadius() / 2.0f, shape.getRadius() / 2.0f));
+        shape.setPosition(sf::Vector2f((float)cellSize * (float)j, (float)cellSize * (float)i));
+    }
+}
+
+void populateLinesMarchingCubes(sf::VertexArray& va)
+{
+    for(uint32_t i = 0; i < yCount - 1; i++)
+        for (uint32_t j = 0; j < xCount - 1; j++){
+            auto verticies = getVerticies(j, i, cellSize);
+            for(auto& v : verticies)
+            {
+                va.append(v.first);
+                va.append(v.second);
+            }
+        }
+}
+
 int main(int argc, char const *argv[])
 {
     sf::RenderWindow window(sf::VideoMode(600, 600), "MarchingCubes");
+    xCount = (window.getSize().x / cellSize) + 1;
+    yCount = (window.getSize().y / cellSize) + 1;
+
     sf::VertexArray linesVA;
 
     linesVA.setPrimitiveType(sf::Lines);
 
     std::vector<sf::CircleShape> pointsVec;
-    uint32_t cellSize = 20;
-    uint32_t xCount = (window.getSize().x / cellSize) + 1;
-    uint32_t yCount = (window.getSize().y / cellSize) + 1;
 
     pointsVec.resize(xCount * yCount);
-
-    std::vector<std::vector<bool>> grid;
-
     grid.resize(yCount);
     for(auto& v : grid)
         v.resize(xCount);
-
-
     sf::Clock clk;
 
-    std::random_device dv;
-    std::mt19937 randomGen(dv());
-    std::uniform_int_distribution uniformDist(0, 1);
-    float dt = 0.0f;
+    float dt = 2.0f;
+
+
+    bool paused = false;
     while(window.isOpen())
     {
         sf::Event event;
@@ -232,41 +257,22 @@ int main(int argc, char const *argv[])
         {
             if (event.type == sf::Event::Closed)
                 window.close();
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::P)
+                paused = !paused;
         }
 
         auto delta = clk.restart().asSeconds();
         dt += delta;
-        if (dt <= 1.0f)
+        if (dt <= 1.0f || paused)
             continue;
 
         dt = 0.0f;
-        for(uint32_t i = 0; i < yCount; i++)
-            for (uint32_t j = 0; j < xCount; j++){
-                grid[i][j] = (bool)uniformDist(randomGen);
-                uint32_t index = j * yCount + i;
 
-                sf::CircleShape& shape = pointsVec[index];
-                if (grid[i][j])
-                    shape.setFillColor(sf::Color::White);
-                else
-                    shape.setFillColor(sf::Color::Black);
-
-                shape.setPosition(sf::Vector2f((float)cellSize * (float)j, (float)cellSize * (float)i));
-                shape.setRadius(3.0f);
-            }
+        populateGrid(pointsVec);
 
         linesVA.clear();
+        populateLinesMarchingCubes(linesVA);
 
-        for(uint32_t i = 0; i < yCount - 1; i++)
-            for (uint32_t j = 0; j < xCount - 1; j++){
-                auto verticies = getVerticies(grid, j, i, cellSize);
-
-                for(auto& v : verticies)
-                {
-                    linesVA.append(v.first);
-                    linesVA.append(v.second);
-                }
-            }
         window.clear(sf::Color(167, 167, 167));
         for (auto& shape : pointsVec)
             window.draw(shape);
