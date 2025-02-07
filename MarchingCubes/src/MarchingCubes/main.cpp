@@ -47,8 +47,8 @@ getLine(sf::Vector2f topLeft, uint32_t length, LINE_STATE state)
     output.first.color = sf::Color::White;
     output.second.color = sf::Color::White;
     sf::Vector2f a = topLeft + sf::Vector2f(0.0f, length / 2.0f);
-    sf::Vector2f b = topLeft + sf::Vector2f(length / 2.0f, length);
-    sf::Vector2f c = topLeft + sf::Vector2f(length, length / 2.0f);
+    sf::Vector2f b = topLeft + sf::Vector2f((float)length / 2.0f, (float)length);
+    sf::Vector2f c = topLeft + sf::Vector2f((float)length, length / 2.0f);
     sf::Vector2f d = topLeft + sf::Vector2f(length / 2.0f, 0.0f);
     switch(state)
     {
@@ -105,7 +105,7 @@ getLine(sf::Vector2f topLeft, uint32_t length, LINE_STATE state)
 }
 
 inline static std::vector<std::pair<sf::Vertex, sf::Vertex>>
-getVerticies(uint32_t topLeftX, uint32_t topLeftY, uint32_t length)
+getVertices(uint32_t topLeftX, uint32_t topLeftY, uint32_t length)
 {
     bool topLeft = grid[topLeftY][topLeftX];
     bool topRight = grid[topLeftY][topLeftX + 1];
@@ -114,86 +114,86 @@ getVerticies(uint32_t topLeftX, uint32_t topLeftY, uint32_t length)
 
     uint32_t state = topLeft * 8 + topRight * 4 + bottomRight * 2 + bottomLeft * 1;
 
-    std::vector<std::pair<sf::Vertex, sf::Vertex>> verticies;
+    std::vector<std::pair<sf::Vertex, sf::Vertex>> vertices;
 
     sf::Vector2f topLeftPos = sf::Vector2f((float)topLeftX * (float)length, (float)topLeftY * (float)length);
 
     switch(state){
         case 1:
         {
-            verticies.push_back(getLine(topLeftPos, length, AB));
+            vertices.push_back(getLine(topLeftPos, length, AB));
         }
         break;
         case 2:
         {
-            verticies.push_back(getLine(topLeftPos, length, BC));
+            vertices.push_back(getLine(topLeftPos, length, BC));
         }
         break;
         case 3:
         {
-            verticies.push_back(getLine(topLeftPos, length, AC));
+            vertices.push_back(getLine(topLeftPos, length, AC));
         }
         break;
         case 4:
         {
-            verticies.push_back(getLine(topLeftPos, length, CD));
+            vertices.push_back(getLine(topLeftPos, length, CD));
         }
         break;
         case 5:
         {
-            verticies.push_back(getLine(topLeftPos, length, CD));
-            verticies.push_back(getLine(topLeftPos, length, AB));
+            vertices.push_back(getLine(topLeftPos, length, CD));
+            vertices.push_back(getLine(topLeftPos, length, AB));
         }
         break;
         case 6:
         {
-            verticies.push_back(getLine(topLeftPos, length, BD));
+            vertices.push_back(getLine(topLeftPos, length, BD));
         }
         break;
         case 7:
         {
-            verticies.push_back(getLine(topLeftPos, length, DA));
+            vertices.push_back(getLine(topLeftPos, length, DA));
         }
         break;
         case 8:
         {
-            verticies.push_back(getLine(topLeftPos, length, DA));
+            vertices.push_back(getLine(topLeftPos, length, DA));
         }
         break;
         case 9:
         {
-            verticies.push_back(getLine(topLeftPos, length, BD));
+            vertices.push_back(getLine(topLeftPos, length, BD));
         }
         break;
         case 10:
         {
-            verticies.push_back(getLine(topLeftPos, length, AB));
-            verticies.push_back(getLine(topLeftPos, length, CD));
+            vertices.push_back(getLine(topLeftPos, length, AB));
+            vertices.push_back(getLine(topLeftPos, length, CD));
         }
         break;
         case 11:
         {
-            verticies.push_back(getLine(topLeftPos, length, CD));
+            vertices.push_back(getLine(topLeftPos, length, CD));
         }
         break;
         case 12:
         {
-            verticies.push_back(getLine(topLeftPos, length, AC));
+            vertices.push_back(getLine(topLeftPos, length, AC));
         }
         break;
         case 13:
         {
-            verticies.push_back(getLine(topLeftPos, length, BC));
+            vertices.push_back(getLine(topLeftPos, length, BC));
         }
         break;
         case 14:
         {
-            verticies.push_back(getLine(topLeftPos, length, AB));
+            vertices.push_back(getLine(topLeftPos, length, AB));
         }
         break;
     }
 
-    return verticies;
+    return vertices;
 }
 
 void populateGrid(std::vector<sf::CircleShape>& pointsVec)
@@ -219,8 +219,8 @@ void populateLinesMarchingCubes(sf::VertexArray& va)
 {
     for(uint32_t i = 0; i < yCount - 1; i++)
         for (uint32_t j = 0; j < xCount - 1; j++){
-            auto verticies = getVerticies(j, i, cellSize);
-            for(auto& v : verticies)
+            auto vertices = getVertices(j, i, cellSize);
+            for(auto& v : vertices)
             {
                 va.append(v.first);
                 va.append(v.second);
